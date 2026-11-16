@@ -1,4 +1,4 @@
-// app.js - Interfaz Comercial Multi-Atleta, Constructor de Ruedas, Notas, Exportador PNG y Nube
+// app.js - Interfaz Comercial Multi-Atleta, 10 Niveles, Hitos Fisiológicos y Nube
 
 const uiState = {
   tab: 'train',
@@ -8,7 +8,7 @@ const uiState = {
   libSearch: '',
   libGroup: 'Todos',
   libLevel: 'Todos',
-  libFilter: 'all', // 'all' | 'fav' | 'excluded'
+  libFilter: 'all',
   progressExerciseId: null
 };
 
@@ -109,7 +109,7 @@ function openWheelEditorModal() {
       </div>
       <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:6px;">Editar Rueda de Entrenamiento</h2>
       <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:16px;">
-        Configura cuántos días tiene tu ciclo rotativo, edita sus bloques y elige cualquier ejercicio del catálogo.
+        Configura cuántos días tiene tu ciclo rotativo, edita sus bloques y elige cualquier ejercicio del catálogo de 10 niveles.
       </p>
   `;
 
@@ -139,7 +139,7 @@ function openWheelEditorModal() {
               ${block.type === 'interval' ? `<div style="color:var(--accent-amber);">🔥 ${escapeHTML(block.cue)}</div>` : block.exIds.map((id, exIdx) => `
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin:5px 0;">
                   <select class="form-select" style="padding:6px 8px; font-size:0.8rem;" data-on-change="change-ex-wheel" data-ridx="${rIdx}" data-bidx="${bIdx}" data-expos="${exIdx}">
-                    ${availableExercises.map(ex => `<option value="${ex.id}" ${ex.id === id ? 'selected' : ''}>#${ex.num} [${ex.group} · N${ex.level}] ${escapeHTML(ex.name)}</option>`).join('')}
+                    ${availableExercises.map(ex => `<option value="${ex.id}" ${ex.id === id ? 'selected' : ''}>#${ex.num} [${ex.group} · N${ex.level}] ${escapeHTML(ex.name)} (Hito: ${ex.masteryReps})</option>`).join('')}
                   </select>
                   <button class="btn btn-ghost" style="padding:5px 8px; font-size:0.72rem; flex-shrink:0;" data-action="remove-ex-wheel" data-ridx="${rIdx}" data-bidx="${bIdx}" data-expos="${exIdx}">✕</button>
                 </div>
@@ -304,8 +304,8 @@ function openSessionSummaryModal(sessionData, promotions) {
           <div style="font-size:0.78rem; font-weight:800; color:var(--accent-amber); margin-bottom:8px;">★ ASCENSO DE NIVEL DESBLOQUEADO</div>
           ${promotions.map(p => `
             <div style="background:var(--surface-2); border:1px solid rgba(16,185,129,0.35); border-radius:10px; padding:10px; margin-bottom:6px;">
-              <div style="font-size:0.74rem; color:var(--text-muted); text-decoration:line-through;">${escapeHTML(p.oldEx.name)}</div>
-              <div style="font-size:0.9rem; font-weight:800; color:var(--accent-green); margin-top:3px;">→ ${escapeHTML(p.newEx.name)}</div>
+              <div style="font-size:0.74rem; color:var(--text-muted); text-decoration:line-through;">Nivel ${p.oldEx.level}: ${escapeHTML(p.oldEx.name)}</div>
+              <div style="font-size:0.9rem; font-weight:800; color:var(--accent-green); margin-top:3px;">→ Nivel ${p.newEx.level}: ${escapeHTML(p.newEx.name)}</div>
             </div>
           `).join('')}
         </div>
@@ -336,18 +336,18 @@ function openPromotionModal(promotions) {
   modal.innerHTML = `
     <div class="modal-card" style="max-width: 480px;" tabindex="-1">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <span class="badge" style="color:var(--accent-amber); border-color:var(--accent-amber);">★ Salto Biomecánico</span>
+        <span class="badge" style="color:var(--accent-amber); border-color:var(--accent-amber);">★ Salto de Nivel</span>
         <button class="btn btn-ghost" style="padding:4px 9px;" data-action="close-modal" data-id="promotion-modal">✕</button>
       </div>
-      <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:6px;">¡Has dominado el ejercicio!</h2>
+      <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:6px;">¡Has superado el hito fisiológico!</h2>
       <p style="font-size:0.84rem; color:var(--text-secondary); margin-bottom:16px;">
-        El motor DPDA-4 ha actualizado tu rueda al siguiente escalón de dificultad automáticamente.
+        El motor DPDA-4 ha promovido tu rueda al siguiente escalón de dificultad de los 10 niveles:
       </p>
       <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:18px;">
         ${promotions.map(p => `
           <div style="background:var(--surface-2); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:12px;">
-            <div style="font-size:0.75rem; color:var(--text-muted); text-decoration:line-through;">Dominado: ${escapeHTML(p.oldEx.name)}</div>
-            <div style="font-size:0.95rem; font-weight:800; color:var(--accent-green); margin-top:4px;">→ Nuevo reto: ${escapeHTML(p.newEx.name)}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted); text-decoration:line-through;">Dominado (N${p.oldEx.level}): ${escapeHTML(p.oldEx.name)}</div>
+            <div style="font-size:0.95rem; font-weight:800; color:var(--accent-green); margin-top:4px;">→ Nuevo reto (N${p.newEx.level}): ${escapeHTML(p.newEx.name)}</div>
           </div>
         `).join('')}
       </div>
@@ -357,7 +357,7 @@ function openPromotionModal(promotions) {
 }
 
 // =====================================================================
-// MODAL ONBOARDING BIOMÉTRICO CON CALIBRACIÓN
+// MODAL ONBOARDING BIOMÉTRICO CON 10 NIVELES Y CALIBRACIÓN
 // =====================================================================
 function openOnboardingModal(allowClose = true) {
   let modal = document.getElementById('onboarding-modal');
@@ -386,22 +386,29 @@ function openOnboardingModal(allowClose = true) {
         <div class="form-group"><label class="form-label" for="ob-age">Edad</label><input id="ob-age" type="number" class="form-input" value="28"></div>
       </div>
       <div class="form-group">
-        <label class="form-label" for="ob-level">Nivel Actual</label>
+        <label class="form-label" for="ob-level">Nivel Inicial (Escala 1 a 10)</label>
         <select id="ob-level" class="form-select">
-          <option value="1">Nivel 1 · Principiante</option>
-          <option value="2" selected>Nivel 2 · Intermedio</option>
-          <option value="3">Nivel 3 · Avanzado / Élite</option>
+          <option value="1">Nivel 1 · Adaptación (Pared, Inclinadas altas, Rodillas)</option>
+          <option value="2">Nivel 2 · Base Inicial (Inclinadas bajas, Australianas)</option>
+          <option value="3">Nivel 3 · Fundamental (Flexiones suelo, Sentadilla aérea)</option>
+          <option value="4" selected>Nivel 4 · Intermedio Bajo (Dominadas estrictas, Fondos, Búlgara)</option>
+          <option value="5">Nivel 5 · Intermedio Sólido (Declinadas, Chest-to-bar, Toes-to-bar)</option>
+          <option value="6">Nivel 6 · Intermedio Alto (Anillas, Arqueras, Pino contra pared)</option>
+          <option value="7">Nivel 7 · Avanzado (Anillas RTO, Pseudo-planche, Tuck FL)</option>
+          <option value="8">Nivel 8 · Avanzado Alto (Muscle-up, Pistol estricta, Dragon Flag)</option>
+          <option value="9">Nivel 9 · Élite (OAP asistida, Pino libre, Straddle Planche)</option>
+          <option value="10">Nivel 10 · Maestro (OAP estricta, Full Planche, Maltese, Hefesto)</option>
         </select>
       </div>
 
       <div style="background:var(--surface-2); border-left:3px solid var(--accent-blue); padding:12px; margin:16px 0; border-radius:8px;">
         <label class="form-label" style="color:var(--text-primary);">Test de Fuerza Inicial (Reps Máximas Seguidas)</label>
-        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">El algoritmo DPDA-4 calculará el 70% como punto de partida óptimo para tus series.</p>
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">Calibra tu punto de partida hacia los hitos fisiológicos de dominio (20 dominadas, 50 sentadillas, etc.).</p>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
           <div><label for="ob-test-push" style="font-size:0.72rem; color:var(--text-secondary);">Flexiones (Empuje)</label><input id="ob-test-push" type="number" class="form-input" value="15"></div>
-          <div><label for="ob-test-pull" style="font-size:0.72rem; color:var(--text-secondary);">Dominadas (Tirón)</label><input id="ob-test-pull" type="number" class="form-input" value="6"></div>
+          <div><label for="ob-test-pull" style="font-size:0.72rem; color:var(--text-secondary);">Dominadas (Tirón)</label><input id="ob-test-pull" type="number" class="form-input" value="8"></div>
           <div><label for="ob-test-legs" style="font-size:0.72rem; color:var(--text-secondary);">Sentadillas (Pierna)</label><input id="ob-test-legs" type="number" class="form-input" value="25"></div>
-          <div><label for="ob-test-core" style="font-size:0.72rem; color:var(--text-secondary);">Elev. Piernas (Core)</label><input id="ob-test-core" type="number" class="form-input" value="15"></div>
+          <div><label for="ob-test-core" style="font-size:0.72rem; color:var(--text-secondary);">Elev. Piernas (Core)</label><input id="ob-test-core" type="number" class="form-input" value="12"></div>
         </div>
       </div>
 
@@ -462,7 +469,7 @@ function renderTrainTab() {
   document.getElementById('app-header').innerHTML = `
     <div>
       <div class="topbar-title">Hola, ${escapeHTML(profile.name)}</div>
-      <div class="topbar-sub">${profile.weightKg} kg · ${profile.heightCm} cm · IMC ${bmi} · Nivel ${profile.level}</div>
+      <div class="topbar-sub">${profile.weightKg} kg · ${profile.heightCm} cm · IMC ${bmi} · Nivel ${profile.level}/10</div>
     </div>
     <button class="btn btn-ghost" data-action="open-onboarding">+ Atleta</button>
   `;
@@ -480,15 +487,16 @@ function renderTrainTab() {
       const presc = ProgressionEngine.getPrescription(profile, exId, b.sets);
       const totalReps = presc.targetReps.reduce((a, c) => a + c, 0);
       estTonnage += Math.round(totalReps * profile.weightKg * (ex ? ex.leverage : 0.7));
+      const unit = ex && ex.metric === 'seconds' ? 's' : '';
       const statusBadge = presc.phase === 'DESCARGA'
         ? '<span class="badge" style="color:var(--accent-blue); border-color:var(--accent-blue);">DESCARGA 📉</span>'
-        : `<span class="badge" style="font-size:0.64rem;">Fase ${presc.phase}</span>`;
+        : `<span class="badge" style="font-size:0.64rem;">N${ex ? ex.level : 1} · Fase ${presc.phase}</span>`;
       return `
         <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 0; border-top:1px solid var(--border-subtle); font-size:0.83rem;">
           <div>
             <div style="font-weight:600;">${escapeHTML(ex ? ex.name : exId)}</div>
             <div style="font-size:0.72rem; color:var(--text-muted); font-family:var(--font-mono);">
-              Meta: [${presc.targetReps.join('-')}] · Desc. ${presc.restSec}s
+              Hoy: [${presc.targetReps.join('-')}]${unit} · Hito dominio: ${presc.maxReps}${unit} · Desc. ${presc.restSec}s
             </div>
           </div>
           ${statusBadge}
@@ -542,10 +550,10 @@ function renderTrainTab() {
         <div class="panel">
           <h3 style="font-size:0.95rem; font-weight:800; margin-bottom:6px;">Personalización Activa</h3>
           <p style="font-size:0.82rem; color:var(--text-secondary); line-height:1.5;">
-            Tienes <strong>${profile.blacklist.length}</strong> ejercicios excluidos y <strong>${profile.favorites.length}</strong> favoritos en tu catálogo de ${EXERCISE_CATALOG.length} movimientos.
+            Tienes <strong>${profile.blacklist.length}</strong> ejercicios excluidos y <strong>${profile.favorites.length}</strong> favoritos en tu catálogo de ${EXERCISE_CATALOG.length} movimientos (10 niveles).
           </p>
           <button class="btn btn-ghost" style="width:100%; margin-top:12px;" data-action="switch-tab" data-tab="library">
-            Gestionar Catálogo de ${EXERCISE_CATALOG.length} Ejercicios
+            Explorar Catálogo por Niveles (1–10)
           </button>
         </div>
       </div>
@@ -554,7 +562,7 @@ function renderTrainTab() {
 }
 
 // =====================================================================
-// VISTA 2: CATÁLOGO DE 500 EJERCICIOS (FAVORITOS & EXCLUIDOS)
+// VISTA 2: CATÁLOGO DE 500 EJERCICIOS (FILTRO POR 10 NIVELES E HITOS)
 // =====================================================================
 function toggleFavoriteEx(exId) {
   const profile = UserStore.getActiveProfile();
@@ -604,8 +612,8 @@ function renderLibraryTabInner() {
   const profile = UserStore.getActiveProfile();
   document.getElementById('app-header').innerHTML = `
     <div>
-      <div class="topbar-title">Catálogo Maestro (${EXERCISE_CATALOG.length} Ejercicios)</div>
-      <div class="topbar-sub">Marca favoritos (★) o excluye (✕) los que no quieras entrenar</div>
+      <div class="topbar-title">Catálogo Maestro (${EXERCISE_CATALOG.length} Ejercicios · 10 Niveles)</div>
+      <div class="topbar-sub">Cada movimiento incluye su hito fisiológico de dominio para ascender</div>
     </div>
   `;
 
@@ -627,10 +635,8 @@ function renderLibraryTabInner() {
 
         <label class="sr-only" for="lib-level-select">Filtrar por nivel</label>
         <select id="lib-level-select" class="form-select" style="width:auto;" data-on-change="lib-level">
-          <option value="Todos" ${uiState.libLevel === 'Todos' ? 'selected' : ''}>Todos Niveles</option>
-          <option value="1" ${uiState.libLevel === '1' ? 'selected' : ''}>Nivel 1 · Base</option>
-          <option value="2" ${uiState.libLevel === '2' ? 'selected' : ''}>Nivel 2 · Intermedio</option>
-          <option value="3" ${uiState.libLevel === '3' ? 'selected' : ''}>Nivel 3 · Élite</option>
+          <option value="Todos" ${uiState.libLevel === 'Todos' ? 'selected' : ''}>Todos (N1–N10)</option>
+          ${[1,2,3,4,5,6,7,8,9,10].map(lvl => `<option value="${lvl}" ${uiState.libLevel === String(lvl) ? 'selected' : ''}>${escapeHTML(LEVEL_NAMES[lvl])}</option>`).join('')}
         </select>
 
         <label class="sr-only" for="lib-filter-select">Filtrar favoritos o excluidos</label>
@@ -656,11 +662,12 @@ function renderLibraryTabInner() {
       ${filtered.slice(0, CONFIG.LIBRARY_PAGE_SIZE).map(ex => {
         const isFav = profile.favorites.includes(ex.id);
         const isExcl = profile.blacklist.includes(ex.id);
+        const unit = ex.metric === 'seconds' ? 's' : ' reps';
         return `
           <div class="lib-row ${isExcl ? 'excluded' : ''} ${isFav ? 'favorite' : ''}">
             <div>
               <div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">
-                #${ex.num} · ${escapeHTML(ex.group)} · Nivel ${ex.level} (${escapeHTML(ex.levelName)}) · ${escapeHTML(ex.equipment)}
+                #${ex.num} · ${escapeHTML(ex.group)} · <strong style="color:var(--accent-blue);">${escapeHTML(ex.levelName)}</strong> · ${escapeHTML(ex.equipment)} · <span style="color:var(--accent-green);">Hito dominio: ${ex.masteryReps}${unit}</span>
               </div>
               <div style="font-weight:700; font-size:0.92rem; margin-top:2px;">${escapeHTML(ex.name)}</div>
             </div>
@@ -671,7 +678,7 @@ function renderLibraryTabInner() {
           </div>
         `;
       }).join('')}
-      ${filtered.length > CONFIG.LIBRARY_PAGE_SIZE ? `<p style="text-align:center; color:var(--text-muted); font-size:0.82rem; padding:14px;">Usa el buscador o los filtros superiores para acotar los ${filtered.length} resultados.</p>` : ''}
+      ${filtered.length > CONFIG.LIBRARY_PAGE_SIZE ? `<p style="text-align:center; color:var(--text-muted); font-size:0.82rem; padding:14px;">Usa el buscador o el filtro de nivel (N1–N10) para acotar los ${filtered.length} resultados.</p>` : ''}
     </div>
   `;
 }
@@ -728,7 +735,7 @@ function buildExerciseProgressChartHTML(profile) {
         : `
           <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
             <span style="font-size:0.74rem; color:var(--text-secondary);">${buildTrendStat(points, unit)}</span>
-            <span class="badge">Fase ${p.phase} · Mejor marca: ${p.bestSet}${unit}</span>
+            <span class="badge">Fase ${p.phase} · Mejor marca: ${p.bestSet}${unit} / Hito: ${p.maxReps}${unit}</span>
           </div>
           ${buildLineChartSVG(points, { ariaLabel: `Progreso de ${ex ? ex.name : selectedId}` })}
         `
@@ -755,7 +762,7 @@ function renderScienceTab() {
   document.getElementById('app-header').innerHTML = `
     <div>
       <div class="topbar-title">Motor de Sobrecarga DPDA-4</div>
-      <div class="topbar-sub">Calibración Inicial, Progresión por RPE, Descargas y Saltos de Nivel</div>
+      <div class="topbar-sub">Escala de 10 Niveles, Hitos Fisiológicos por Ejercicio y Descargas Automáticas</div>
     </div>
   `;
 
@@ -769,23 +776,23 @@ function renderScienceTab() {
   document.getElementById('app-container').innerHTML = `
     <div class="bento-grid">
       <div class="panel">
-        <span class="badge" style="margin-bottom:10px;">Metodología Sin Lastre</span>
-        <h2 style="font-size:1.3rem; font-weight:800; margin-bottom:12px;">Cómo progresas en cada sesión</h2>
+        <span class="badge" style="margin-bottom:10px;">Ciencia Aplicada</span>
+        <h2 style="font-size:1.3rem; font-weight:800; margin-bottom:12px;">Cómo se domina cada ejercicio</h2>
 
         <div style="display:flex; flex-direction:column; gap:12px; font-size:0.86rem; color:var(--text-secondary); line-height:1.5;">
           <div style="padding:12px; background:var(--surface-2); border-radius:10px; border-left:3px solid var(--accent-green);">
-            <strong style="color:var(--text-primary);">Fase 1 · Escalada de Volumen Calibrada</strong><br>
-            Parte del 70% de tu test inicial y suma <strong>+1 rep</strong> en las series más bajas si tu RPE fue 8, o <strong>+2 reps</strong> si fue RPE ≤ ${CONFIG.RPE_EASY_THRESHOLD}.
+            <strong style="color:var(--text-primary);">1. Hitos Fisiológicos Específicos por Patrón</strong><br>
+            Cada movimiento tiene su propio techo realista antes de pasar de nivel: <strong>50 reps</strong> en sentadillas aéreas/gemelos, <strong>20 reps</strong> en dominadas, fondos y remos, <strong>12–15 reps</strong> en variantes unilaterales/anillas y <strong>6–10 reps</strong> en excéntricas lentas y habilidades élite.
           </div>
 
           <div style="padding:12px; background:var(--surface-2); border-radius:10px; border-left:3px solid var(--accent-amber);">
-            <strong style="color:var(--text-primary);">Fase 2 · Compresión de Densidad (${CONFIG.REST_DEFAULT_SEC}s → ${CONFIG.REST_MIN_SEC}s)</strong><br>
-            Al alcanzar el techo de repeticiones, mantiene las repeticiones y recorta el descanso <strong>-${CONFIG.REST_STEP_SEC}s por ciclo</strong> hasta llegar a ${CONFIG.REST_MIN_SEC}s.
+            <strong style="color:var(--text-primary);">2. Compresión de Densidad (90s → 45s)</strong><br>
+            Una vez alcanzas el hito de repeticiones en todas tus series, mantienes las repeticiones y recortas el descanso <strong>-15s por sesión</strong> hasta lograr completar todas las series con <strong>45s</strong> de pausa.
           </div>
 
           <div style="padding:12px; background:var(--surface-2); border-radius:10px; border-left:3px solid var(--accent-blue);">
-            <strong style="color:var(--text-primary);">Fase 3 & Descargas Automáticas (Deloads)</strong><br>
-            Si encadenas 2 sesiones al límite (RPE ≥ ${CONFIG.RPE_HIGH_THRESHOLD}), se activa una <strong>Descarga al 60%</strong> para supercompensar. Al superar el techo con 45s de descanso, asciendes al siguiente ejercicio del catálogo.
+            <strong style="color:var(--text-primary);">3. Escalera de 10 Niveles y Descargas</strong><br>
+            Al dominar el hito con 45s de descanso, asciendes exactamente <strong>1 nivel (N → N+1)</strong> dentro de tu mismo patrón biomecánico. Si encadenas 2 sesiones al fallo (RPE ≥ 9.2), el motor activa una descarga al 60% y luego restaura tu progreso.
           </div>
         </div>
       </div>
@@ -803,12 +810,12 @@ function renderScienceTab() {
               <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
                 <strong style="font-size:0.9rem;">${escapeHTML(ex.name)}</strong>
                 <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                  <span class="badge">${p.phase === 'DESCARGA' ? 'Descarga 📉' : `Fase ${p.phase}`}</span>
+                  <span class="badge">N${ex.level} · ${p.phase === 'DESCARGA' ? 'Descarga 📉' : `Fase ${p.phase}`}</span>
                   ${canManualPromote ? `<button class="btn btn-emerald" style="padding:4px 9px; font-size:0.72rem;" data-action="manual-promote" data-id="${id}">Subir Nivel ↑</button>` : ''}
                 </div>
               </div>
               <div style="font-size:0.78rem; color:var(--text-secondary); font-family:var(--font-mono); margin-top:4px;">
-                Próxima meta: [${p.targetReps.join('-')}] · Descanso: ${p.restSec}s · Último RPE: ${p.lastRPE}
+                Meta hoy: [${p.targetReps.join('-')}] · Hito dominio: ${p.maxReps} · Descanso: ${p.restSec}s
               </div>
             </div>
           `;
@@ -901,7 +908,7 @@ function renderStatsTab() {
             <button type="button" role="listitem" style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-radius:10px; background:var(--surface-2); border:1px solid ${p.id === profile.id ? 'var(--accent-green)' : 'var(--border-subtle)'}; cursor:pointer; width:100%; text-align:left; color:inherit; font:inherit;" data-action="switch-profile" data-id="${p.id}">
               <div>
                 <div style="font-weight:700;">${escapeHTML(p.name)} ${p.id === profile.id ? '●' : ''}</div>
-                <div style="font-size:0.75rem; color:var(--text-secondary);">${p.weightKg} kg · ${p.heightCm} cm · Nivel ${p.level} · ${p.history.length} sesiones</div>
+                <div style="font-size:0.75rem; color:var(--text-secondary);">${p.weightKg} kg · ${p.heightCm} cm · Nivel ${p.level}/10 · ${p.history.length} sesiones</div>
               </div>
               <span class="badge">${p.id === profile.id ? 'Activo' : 'Cambiar'}</span>
             </button>
@@ -943,8 +950,15 @@ function renderStatsTab() {
 }
 
 // =====================================================================
-// SALA DE ENTRENAMIENTO EN VIVO (CON WAKE LOCK, NOTAS Y TABATA/EMOM)
+// SALA DE ENTRENAMIENTO EN VIVO (CON DESCANSOS DE SUPERSERIE CORREGIDOS)
 // =====================================================================
+function computeSetRestSeconds(block, exPos, setIdx, prescRestSec) {
+  const isLastExInBlock = exPos === block.exIds.length - 1;
+  // En superseries de 2 ejercicios: tras el 1º descansas 15s (transición),
+  // y tras el 2º descansas el tiempo completo del motor DPDA-4 en TODAS las rondas.
+  return isLastExInBlock ? prescRestSec : CONFIG.REST_BETWEEN_SETS_SEC;
+}
+
 function startWorkoutSession() {
   SoundEngine.init();
   if (typeof WakeLockManager !== 'undefined') WakeLockManager.enable();
@@ -961,14 +975,14 @@ function startWorkoutSession() {
 
   uiState.activeSession.blocks.forEach(block => {
     if (block.type === 'interval') return;
-    block.exIds.forEach(exId => {
+    block.exIds.forEach((exId, exPos) => {
       const presc = ProgressionEngine.getPrescription(profile, exId, block.sets);
       uiState.activeSession.setsData[exId] = presc.targetReps.map((tVal, idx) => ({
         target: tVal,
         value: tVal,
         rpe: 8,
         completed: false,
-        restAfter: idx === block.sets - 1 ? presc.restSec : CONFIG.REST_BETWEEN_SETS_SEC
+        restAfter: computeSetRestSeconds(block, exPos, idx, presc.restSec)
       }));
     });
   });
@@ -1089,12 +1103,13 @@ function renderWorkout() {
       const ex = EXERCISE_BY_ID[exId];
       const presc = ProgressionEngine.getPrescription(profile, exId, block.sets);
       const sets = sess.setsData[exId];
+      const unit = ex.metric === 'seconds' ? 's' : '';
 
       html += `
         <div class="panel" style="margin-bottom:14px; padding:16px;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
             <div>
-              <span class="badge" style="margin-bottom:6px;">#${ex.num} · ${escapeHTML(ex.group)} · ${escapeHTML(ex.equipment)}</span>
+              <span class="badge" style="margin-bottom:6px;">#${ex.num} · ${escapeHTML(ex.group)} · Nivel ${ex.level}/10 · ${escapeHTML(ex.equipment)}</span>
               <div style="font-size:1.05rem; font-weight:800;">${escapeHTML(ex.name)}</div>
             </div>
             <div style="display:flex; gap:6px; flex-shrink:0;">
@@ -1106,7 +1121,7 @@ function renderWorkout() {
           <input type="text" class="form-input" style="height:34px; font-size:0.78rem; margin:10px 0; background:var(--bg-canvas);" placeholder="Nota técnica o de montaje (ej. Anillas en marca 4, pies en cajón...)" value="${escapeHTML(presc.notes || '')}" data-on-input="save-notes" data-exid="${exId}">
 
           <div class="dpda-banner" style="${presc.phase === 'DESCARGA' ? 'border-color:var(--accent-blue); background:rgba(56,189,248,0.1);' : ''}">
-            <span>🧬 <strong>DPDA-4 ${presc.phase === 'DESCARGA' ? 'Descarga 📉' : `Fase ${presc.phase}`}:</strong> [${presc.targetReps.join('-')}]</span>
+            <span>🧬 <strong>${presc.phase === 'DESCARGA' ? 'Descarga 📉' : `Fase ${presc.phase}`}:</strong> [${presc.targetReps.join('-')}]${unit} <span style="color:var(--text-muted);">(Hito: ${presc.maxReps}${unit})</span></span>
             <span style="font-family:var(--font-mono); color:var(--accent-amber);">Descanso: ${presc.restSec}s</span>
           </div>
 
@@ -1120,7 +1135,6 @@ function renderWorkout() {
       `;
 
       sets.forEach((s, idx) => {
-        const unit = ex.metric === 'seconds' ? 's' : '';
         const rpeLabel = s.rpe === 10 ? 'FALLO' : `RPE ${s.rpe}`;
         html += `
           <div class="set-row ${s.completed ? 'completed' : ''}">
@@ -1161,7 +1175,7 @@ function render() {
   if (sideBox) {
     sideBox.innerHTML = `
       <div style="font-weight:800; color:var(--text-primary);">${escapeHTML(profile.name)}</div>
-      <div style="color:var(--text-secondary); margin-top:2px;">${profile.weightKg} kg · ${profile.heightCm} cm · Nivel ${profile.level}</div>
+      <div style="color:var(--text-secondary); margin-top:2px;">${profile.weightKg} kg · ${profile.heightCm} cm · Nivel ${profile.level}/10</div>
       <button class="btn btn-ghost" style="width:100%; margin-top:8px; padding:6px; font-size:0.74rem;" data-action="switch-tab" data-tab="stats">Cambiar Atleta</button>
     `;
   }
@@ -1344,17 +1358,18 @@ function registerActions() {
     const newId = ProgressionEngine.findReplacement(p, oldId);
     if (newId === oldId) return alert('No hay más ejercicios alternativos disponibles.');
 
-    uiState.activeSession.blocks[bIdx].exIds[exPos] = newId;
+    const block = uiState.activeSession.blocks[bIdx];
+    block.exIds[exPos] = newId;
     p.wheel[p.wheelIndex].blocks[bIdx].exIds[exPos] = newId;
     UserStore.save();
 
-    const presc = ProgressionEngine.getPrescription(p, newId, uiState.activeSession.blocks[bIdx].sets);
-    uiState.activeSession.setsData[newId] = presc.targetReps.map((v, i) => ({
+    const presc = ProgressionEngine.getPrescription(p, newId, block.sets);
+    uiState.activeSession.setsData[newId] = presc.targetReps.map((v, idx) => ({
       target: v,
       value: v,
       rpe: 8,
       completed: false,
-      restAfter: i === uiState.activeSession.blocks[bIdx].sets - 1 ? presc.restSec : CONFIG.REST_BETWEEN_SETS_SEC
+      restAfter: computeSetRestSeconds(block, exPos, idx, presc.restSec)
     }));
     delete uiState.activeSession.setsData[oldId];
     render();

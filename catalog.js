@@ -1,9 +1,17 @@
-// catalog.js - Catálogo Maestro de 500 Ejercicios (6 Grupos · 3 Niveles)
-// Los datos en bruto (RAW_EXERCISE_DB) no cambian respecto a la versión original.
-// Lo que sí cambia es cómo se infiere el equipamiento y cómo se valida el
-// resultado al final, para detectar fallos de clasificación en desarrollo
-// en vez de descubrirlos en producción cuando una rutina pide material
-// que el usuario no tiene.
+// catalog.js - Catálogo Maestro de 500 Ejercicios (6 Grupos · 10 Niveles · Hitos Fisiológicos)
+
+const LEVEL_NAMES = {
+  1: 'N1 · Adaptación',
+  2: 'N2 · Base Inicial',
+  3: 'N3 · Fundamental',
+  4: 'N4 · Intermedio Bajo',
+  5: 'N5 · Intermedio Sólido',
+  6: 'N6 · Intermedio Alto',
+  7: 'N7 · Avanzado',
+  8: 'N8 · Avanzado Alto',
+  9: 'N9 · Élite',
+  10: 'N10 · Maestro'
+};
 
 const RAW_EXERCISE_DB = {
   "Pectoral": {
@@ -309,14 +317,6 @@ const RAW_EXERCISE_DB = {
   }
 };
 
-// -----------------------------------------------------------------------
-// Detección automática de equipamiento y biomecánica por nombre.
-// MEJORA: el original solo reconocía "anilla", "paralela" y "barra/colgado/
-// dominada", así que cosas como "espaldera", "banco" o "cajón" caían por
-// defecto en "Suelo" aunque exigen material específico. Se amplía la lista
-// de palabras clave y se añade un orden de prioridad explícito (lo más
-// específico primero) para reducir falsos negativos.
-// -----------------------------------------------------------------------
 function inferEquipment(name) {
   const n = name.toLowerCase();
   if (n.includes('anilla')) return 'Anillas';
@@ -331,31 +331,116 @@ function inferEquipment(name) {
   return 'Suelo';
 }
 
-function inferLeverageFactor(group, level) {
-  const base = { "Pectoral": 0.65, "Espalda": 0.95, "Hombros": 0.75, "Brazos": 0.60, "Tren Inferior": 0.85, "Core": 0.50 }[group] || 0.70;
-  return +(base + (level - 1) * 0.12).toFixed(2);
+// Clasifica cada ejercicio en una escala granular de 10 niveles y asigna
+// hitos fisiológicos realistas (ej. 50 sentadillas aéreas, 20 dominadas, 8 OAP)
+function analyzeExerciseBiomechanics(group, origLevel, name) {
+  const n = name.toLowerCase();
+  const hasAny = (list) => list.some(k => n.includes(k));
+
+  let level = 5;
+  if (origLevel === 1) {
+    if (hasAny(['pared', 'inclinadas altas', 'rodillas', 'banco con rodillas', 'escapular', 'cajón', 'parcial', '60°', 'de pie', 'corto', 'wall slides', 'apoyo leve'])) {
+      level = 1;
+    } else if (hasAny(['clásicas', 'suelo', 'nudillos', 'horizontal', 'negativas', 'banda', 'estrictas', 'espinilla', 'caminando', 'unilateral', 'completo', '45 cm', 'escalón', '1.5 repeticiones', 'espaldera', '45°', 'pausa de 1 segundo'])) {
+      level = 3;
+    } else {
+      level = 2;
+    }
+  } else if (origLevel === 2) {
+    if (hasAny(['paralelas estrictos', 'paralelas con pausa', 'paralelas tempo', 'pies elevados (cajón 40', 'pies elevados a 30', 'pronas estrictas', 'pronas agarre', 'neutras en paralelas', 'supinas (chin-ups)', 'diamante estrictas', 'búlgara (pie trasero', 'piernas rectas colgado a 90', 'piernas rectas en paralelas', 'piernas rectas en espaldera', 'al ras del suelo', 'skullcrushers', 'cuerpo horizontal', 'rumano a una pierna'])) {
+      level = 4;
+    } else if (hasAny(['a una mano', 'unilateral', 'rto', 'déficit', 'explosiv', 'pliométric', 'sissy libre', 'crow press', 'tiger bend', 'ice cream', 'tuck front lever', 'tuck planche', 'bandera humana en tuck', 'mantle', 'pistol excéntrica', 'pistol asistida', 'nórdico excéntrico'])) {
+      level = 7;
+    } else if (hasAny(['arquer', 'typewriter', 'máquina de escribir', 'anillas', 'pelican', 'pistol al cajón', 'shrimp asistida', 'nórdico asistido', 'pino contra pared', 'limpiaparabrisas', 'skin the cat', 'toalla', 'comando', 'l-sit'])) {
+      level = 6;
+    } else {
+      level = 5;
+    }
+  } else {
+    if (hasAny(['full', 'maltese', 'victorian', '90 grados', '90-degree', 'a un brazo estrictas', 'oap', 'oac', 'a una mano estrictas', 'a una mano con piernas', 'a una mano declinadas', 'superman', 'aztec', '360', 'hefesto', 'unilateral', 'de pie', 'a un brazo', 'imposibles', 'libres', 'pelican completas', 'bandera humana completa', 'dragon flag a una pierna', 'sin piernas', 'transferencias aéreas'])) {
+      level = 10;
+    } else if (hasAny(['búlgaros', 'coreanos', 'rango medio', 'asistid', 'advanced tuck', 'straddle', 'tuck planche', 'contra pared', 'pistol estricta', 'pistol en déficit', 'pistol con pausa', 'shrimp estricta', 'dragon flag estrictas', 'rueda abdominal de pie', 'en v', 'muscle-ups explosivos', 'muscle-ups estrictos en barra', 'muscle-ups agarre', 'cajón alto', 'cosaca con transición'])) {
+      level = 8;
+    } else {
+      level = 9;
+    }
+  }
+
+  const isSlow = hasAny(['excéntric', 'negativ', 'tempo', '4 segundos', '5 segundos', '3 segundos', 'pausa muerta', 'pausa de 2']);
+  const isPlyoMax = hasAny(['superman', 'aztec', '360', 'palmada', 'depth jumps', 'dynos', 'saltos de agarre', 'transferencias aéreas']);
+
+  let masteryReps = 20;
+  let startReps = 8;
+
+  if (group === 'Tren Inferior' && level <= 3 && hasAny(['sentadilla aérea', 'sentadilla sumo', 'sentadilla cerrada', 'gemelos', 'talones', 'pogo', 'buenos días', 'puente', 'glute bridge', 'zancadas', 'step-ups', 'cajón'])) {
+    const isBilateralSquat = (n.includes('sentadilla aérea') || n.includes('sentadilla sumo') || n.includes('sentadilla cerrada') || n.includes('gemelos') || n.includes('talones')) && !n.includes('unilateral') && !n.includes('pausa') && !n.includes('tempo');
+    masteryReps = isBilateralSquat ? 50 : 30;
+    startReps = isBilateralSquat ? 20 : 12;
+  } else if (isPlyoMax) {
+    masteryReps = 8;
+    startReps = 3;
+  } else if (isSlow) {
+    masteryReps = level <= 6 ? 10 : 6;
+    startReps = level <= 6 ? 4 : 3;
+  } else if (level === 10) {
+    masteryReps = hasAny(['a un brazo', 'oap', 'oac', 'full planche', 'maltese', 'victorian', 'hefesto', '90 grados', '90-degree', 'imposibles']) ? 6 : 8;
+    startReps = masteryReps === 6 ? 2 : 3;
+  } else if (level === 9) {
+    masteryReps = 10;
+    startReps = 4;
+  } else if (level === 7 || level === 8) {
+    masteryReps = hasAny(['una mano', 'un brazo', 'pistol', 'shrimp', 'nórdico', 'muscle-up', 'pino', 'planche', 'dragon', 'rto', 'búlgaros', 'coreanos']) ? 12 : 15;
+    startReps = masteryReps === 12 ? 5 : 6;
+  } else if (level === 5 || level === 6) {
+    masteryReps = hasAny(['arquer', 'typewriter', 'anillas', 'pistol', 'nórdico', 'pino', 'tuck', 'toes-to-bar', 'limpiaparabrisas', 'skin the cat']) ? 15 : 20;
+    startReps = masteryReps === 15 ? 6 : 8;
+  } else {
+    if (group === 'Pectoral' && n.includes('flexiones') && !n.includes('fondos')) {
+      masteryReps = level <= 2 ? 30 : 25;
+      startReps = level <= 2 ? 12 : 10;
+    } else if (group === 'Core') {
+      masteryReps = level <= 2 ? 25 : 20;
+      startReps = level <= 2 ? 10 : 8;
+    } else if (group === 'Tren Inferior') {
+      masteryReps = 25;
+      startReps = 10;
+    } else {
+      masteryReps = 20;
+      startReps = 8;
+    }
+  }
+
+  return { level, startReps, masteryReps, isSlow };
 }
 
-// Hidratar los 500 ejercicios en un diccionario y lista plana
+function inferLeverageFactor(group, level) {
+  const base = { "Pectoral": 0.60, "Espalda": 0.90, "Hombros": 0.70, "Brazos": 0.55, "Tren Inferior": 0.80, "Core": 0.45 }[group] || 0.65;
+  return +(base + (level - 1) * 0.04).toFixed(2);
+}
+
 const EXERCISE_CATALOG = [];
 const EXERCISE_BY_ID = {};
 
 let globalIdCounter = 1;
 Object.keys(RAW_EXERCISE_DB).forEach(group => {
-  [1, 2, 3].forEach(level => {
-    RAW_EXERCISE_DB[group][level].forEach(name => {
+  [1, 2, 3].forEach(origLevel => {
+    RAW_EXERCISE_DB[group][origLevel].forEach(name => {
       const id = `ex_${globalIdCounter++}`;
       const isHold = name.toLowerCase().includes('aguante') || name.toLowerCase().includes('isométric');
+      const bio = analyzeExerciseBiomechanics(group, origLevel, name);
       const item = {
         id,
         num: globalIdCounter - 1,
         name,
         group,
-        level,
-        levelName: level === 1 ? 'Principiante' : level === 2 ? 'Intermedio' : 'Avanzado / Élite',
+        level: bio.level,
+        levelName: LEVEL_NAMES[bio.level] || `Nivel ${bio.level}`,
         equipment: inferEquipment(name),
         metric: isHold ? 'seconds' : 'reps',
-        leverage: inferLeverageFactor(group, level)
+        startReps: isHold ? 15 : bio.startReps,
+        masteryReps: isHold ? 40 : bio.masteryReps,
+        isSlow: bio.isSlow,
+        leverage: inferLeverageFactor(group, bio.level)
       };
       EXERCISE_CATALOG.push(item);
       EXERCISE_BY_ID[id] = item;
@@ -363,13 +448,10 @@ Object.keys(RAW_EXERCISE_DB).forEach(group => {
   });
 });
 
-// Comprobación de integridad en desarrollo: si algo del catálogo queda mal
-// formado (sin grupo, nivel fuera de rango...) se avisa alto y claro en
-// consola en vez de fallar silenciosamente más tarde al construir una rutina.
 (function validateCatalogIntegrity() {
   const VALID_GROUPS = Object.keys(RAW_EXERCISE_DB);
   const problems = EXERCISE_CATALOG.filter(e =>
-    !VALID_GROUPS.includes(e.group) || ![1, 2, 3].includes(e.level) || !e.name
+    !VALID_GROUPS.includes(e.group) || e.level < 1 || e.level > 10 || !e.name
   );
   if (problems.length > 0) {
     console.warn(`[KineticPro] ${problems.length} ejercicios del catálogo tienen datos inválidos.`, problems);
