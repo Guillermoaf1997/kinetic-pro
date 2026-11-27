@@ -1,0 +1,6 @@
+KINETIC PRO · versión instalable
+
+Esta carpeta es la app completa. Súbela a un alojamiento web gratuito (Netlify Drop o GitHub Pages)
+y ábrela en el móvil para instalarla. Funciona sin conexión y guarda tus datos en el propio móvil.
+
+Fuentes: Anton, Oswald y Barlow (SIL Open Font License 1.1, licencias en la carpeta fonts).
